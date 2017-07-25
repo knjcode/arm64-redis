@@ -21,9 +21,9 @@ RUN set -x \
 	&& chmod +x /usr/local/bin/gosu \
 	&& gosu nobody true
 
-ENV REDIS_VERSION 4.0.0
+ENV REDIS_VERSION 4.0.1
 ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-$REDIS_VERSION.tar.gz
-ENV REDIS_DOWNLOAD_SHA d539ae309295721d5c3ed7298939645b6f86ab5d25fdf2a0352ab575c159df2d
+ENV REDIS_DOWNLOAD_SHA 2049cd6ae9167f258705081a6ef23bb80b7eff9ff3d0d7481e89510f27457591
 
 # for redis-sentinel see: http://redis.io/topics/sentinel
 RUN buildDeps='gcc libc6-dev make' \
@@ -35,6 +35,9 @@ RUN buildDeps='gcc libc6-dev make' \
 	&& mkdir -p /usr/src/redis \
 	&& tar -xzf redis.tar.gz -C /usr/src/redis --strip-components=1 \
 	&& rm redis.tar.gz \
+        && grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 1$' /usr/src/redis/src/server.h \
+        && sed -ri 's!^(#define CONFIG_DEFAULT_PROTECTED_MODE) 1$!\1 0!' /usr/src/redis/src/server.h \
+        && grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 0$' /usr/src/redis/src/server.h \
 	&& make -C /usr/src/redis \
 	&& make -C /usr/src/redis install \
 	&& rm -r /usr/src/redis \
